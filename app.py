@@ -6,6 +6,7 @@ import cv2
 import numpy as np
 from ultralytics import YOLO
 import sv_ttk  # install this: pip install sv-ttk
+import os
 
 class UtensilManagementApp:
     def __init__(self, root):
@@ -22,6 +23,7 @@ class UtensilManagementApp:
         img = tk.Image("photo", file="logo.gif")
         self.root.tk.call('wm','iconphoto', self.root._w, img)
 
+        self.create_directory('Yolo-Weights')
         self.model = YOLO('Yolo-Weights/yolov8m.pt')
         self.classes = self.load_classes("classes.txt")
         self.class_colors = np.random.randint(0, 255, (len(self.classes), 3))
@@ -46,6 +48,13 @@ class UtensilManagementApp:
 
         self.create_widgets()
         self.configure_layout()
+
+    def create_directory(self, directory_path):
+        if not os.path.exists(directory_path):
+            os.makedirs(directory_path)
+            print(f"Directory '{directory_path}' created.")
+        else:
+            print(f"Directory '{directory_path}' already exists.")
 
     def load_classes(self, file_path):
         with open(file_path, "r") as file:
@@ -89,6 +98,7 @@ class UtensilManagementApp:
     def toggle_recording(self):
         if not self.is_recording_started:
             self.is_recording_started = True
+            self.create_directory('Recorded-Video')
             self.out = cv2.VideoWriter(f'Recorded-Video/{str(datetime.datetime.now().today()).replace(":", "_")}.mp4',
                                       cv2.VideoWriter_fourcc(*'mp4v'), 20.0, (1280, 720))
             self.b2["text"] = 'STOP 🔴'
