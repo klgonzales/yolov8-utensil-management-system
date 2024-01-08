@@ -1,0 +1,5 @@
+# Ignore YOLO weights
+Yolo-Weights/
+
+# Ignore recorded videos
+Recorded-Video/
