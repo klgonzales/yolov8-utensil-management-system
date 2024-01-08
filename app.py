@@ -10,6 +10,7 @@ import os
 
 class UtensilManagementApp:
     def __init__(self, root):
+        # Initialize the main application
         self.root = root
         self.root.title('Automated Utensil Management System')
         sv_ttk.use_dark_theme()  # theme
@@ -23,11 +24,13 @@ class UtensilManagementApp:
         img = tk.Image("photo", file="logo.gif")
         self.root.tk.call('wm','iconphoto', self.root._w, img)
 
+        # Create YOLO model and necessary variables
         self.create_directory('Yolo-Weights')
         self.model = YOLO('Yolo-Weights/yolov8m.pt')
         self.classes = self.load_classes("classes.txt")
         self.class_colors = np.random.randint(0, 255, (len(self.classes), 3))
 
+        # Placement and color mapping dictionaries
         self.placement = {
             "fork_x": -1,
             "knife_x": -1,
@@ -40,15 +43,18 @@ class UtensilManagementApp:
             "spoon": (100, 175, 168)  # Blue
         }
 
+        # Open video capture and initialize other variables
         self.cap = cv2.VideoCapture(0)
         self.out = None
 
         self.is_detection_started = False
         self.is_recording_started = False
 
+        # Create GUI widgets
         self.create_widgets()
         self.configure_layout()
 
+    # Function to create a directory if it doesn't exist
     def create_directory(self, directory_path):
         if not os.path.exists(directory_path):
             os.makedirs(directory_path)
@@ -56,10 +62,12 @@ class UtensilManagementApp:
         else:
             print(f"Directory '{directory_path}' already exists.")
 
+    # Function to load classes from a file
     def load_classes(self, file_path):
         with open(file_path, "r") as file:
             return [class_name.strip() for class_name in file.readlines()]
 
+    # Function to create GUI widgets
     def create_widgets(self):
         self.top_frame = tk.Frame(self.root, borderwidth=1, relief="flat", bg="#2F2F2F")
         self.text_frame = tk.Frame(self.root)
@@ -69,6 +77,7 @@ class UtensilManagementApp:
         self.b1 = ttk.Button(self.bottom_frame, text='START\nUTENSIL DETECTION 🔎', command=self.toggle_detection)
         self.b2 = ttk.Button(self.bottom_frame, text='RECORD 🔴', command=self.toggle_recording)
 
+    # Function to configure GUI layout
     def configure_layout(self):
         self.top_frame.place(x=0, y=0, relwidth=1, relheight=0.9)
         self.text_frame.place(x=0, rely=0.9, relwidth=1, relheight=0.05)
@@ -85,6 +94,7 @@ class UtensilManagementApp:
         self.b1.grid(row=0, column=0, sticky="nwes")
         self.b2.grid(row=0, column=1, sticky="nwes")
 
+    # Function to toggle utensil detection
     def toggle_detection(self):
         if not self.is_detection_started:
             self.is_detection_started = True
@@ -95,6 +105,7 @@ class UtensilManagementApp:
             for widget in self.text_frame.winfo_children():
                 widget.destroy()
 
+    # Function to toggle video recording
     def toggle_recording(self):
         if not self.is_recording_started:
             self.is_recording_started = True
@@ -108,6 +119,7 @@ class UtensilManagementApp:
             if self.out:
                 self.out.release()
 
+    # Function to run the main application loop
     def run(self):
         while True:
             ret, frame = self.cap.read()
@@ -144,6 +156,7 @@ class UtensilManagementApp:
         cv2.destroyAllWindows()
         print("The video was successfully saved")
 
+    # Function to update text labels
     def textLabels(self, text1=None, text2=None, text3=None):
         # Clear any existing labels
         for widget in self.text_frame.winfo_children():
@@ -166,6 +179,7 @@ class UtensilManagementApp:
         label2.grid(row=0, column=1, sticky="nwes")
         label3.grid(row=0, column=2, sticky="nwes")
 
+    # Function to perform object detection
     def perform_detection(self, frame):
         for class_id, bbox, score in zip(self.classes, self.bboxes, self.probs):
             class_name = self.result.names[class_id]
@@ -220,18 +234,9 @@ class UtensilManagementApp:
                 print("s: ", spoon_x)
 
                 if fork_x < knife_x:
-                    if knife_x < spoon_x:
-                        # cv2.putText(img=frame, fontScale=1, text="Correct", org=(0, 30),
-                        #             fontFace=cv2.FONT_HERSHEY_SIMPLEX, color=(200, 0, 50), thickness=2)
-                        self.textLabels(text2="Correct Utensil Order")
-                    else:
-                        # cv2.putText(img=frame, fontScale=1, text="Knife should be after the fork", org=(0, 30),
-                        #             fontFace=cv2.FONT_HERSHEY_SIMPLEX, color=(200, 0, 50), thickness=2)
-                        self.textLabels(text2="Knife should be after the fork")
-                else:
-                    # cv2.putText(img=frame, fontScale=1, text="Fork should be on the left side", org=(0, 30),
-                    #             fontFace=cv2.FONT_HERSHEY_SIMPLEX, color=(200, 0, 50), thickness=2)
-                        self.textLabels(text2="Fork should be on the left side")
+                    if knife_x < spoon_x: self.textLabels(text2="Correct Utensil Order")
+                    else: self.textLabels(text2="Knife should be after the fork")
+                else: self.textLabels(text2="Fork should be on the left side")
 
 
 if __name__ == "__main__":
